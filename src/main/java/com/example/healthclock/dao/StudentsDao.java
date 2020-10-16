@@ -14,4 +14,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  **/
 
 public interface StudentsDao extends JpaRepository<StudentsEntity,Integer> {
+    
 }

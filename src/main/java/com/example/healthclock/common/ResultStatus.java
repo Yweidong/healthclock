@@ -5,7 +5,9 @@ import org.springframework.http.HttpStatus;
 public enum ResultStatus {
     SUCCESS(HttpStatus.OK,200,"ok"),
     BAD_REQUEST(HttpStatus.BAD_REQUEST, 400, "Bad Request"),
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 500, "Internal Server Error"),;
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 500, "Internal Server Error"),
+    SPECIAL_CODE(HttpStatus.BAD_REQUEST,4000,"special Request"),
+    ;
     /** 返回的HTTP状态码,  符合http请求 */
     private HttpStatus httpStatus;
     /** 业务异常码 */

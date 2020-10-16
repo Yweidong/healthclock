@@ -13,4 +13,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  **/
 
 public interface IsstartDao extends JpaRepository<IsstartEntity,Integer> {
+    IsstartEntity findByClassidAndSchoolId(Integer classid,Integer schoolId);
 }
