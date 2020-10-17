@@ -15,7 +15,7 @@ public class Result<T> {
     /** 返回参数 */
     private T data;
 
-    private Result(ResultStatus resultStatus, T data) {
+    public Result(ResultStatus resultStatus, T data) {
         this.code = resultStatus.getCode();
         this.message = resultStatus.getMessage();
         this.data = data;

@@ -51,24 +51,27 @@ public class ClockServiceImpl implements ClockService {
             return map;
         }
         String redis_key = "clock:"+stuId;
-        map.put("code",200);
-        map.put("message","ok");
+
         if(redisTemplate.hasKey(redis_key) && redisTemplate.opsForValue().get(redis_key).equals(1)) {
             map.put("code",4000);
             map.put("message"," ");
         }else {
-
+            map.put("code",200);
+            map.put("message","ok");
             HealthPunchEntity queryResult = healthPunchDao.defineQueryResult(stuId,
                     String.valueOf(DateToTimestmp(SysCurrTime())),
                     String.valueOf(DateToTimestmp(TomorrowDate()))
             );
             if(queryResult!=null) {
-                map.put("code",400);
+
                 if(queryResult.getIscheck() == 2) {
+                    map.put("code",400);
                     map.put("message","您孩子状态码已审核通过,请明天开始正常打卡");
                 }else if(queryResult.getEpitype()!=1 && queryResult.getEpitype()!=5) {
+                    map.put("code",400);
                     map.put("message","您孩子状态码异常,请变更审核过后再来打卡");
                 }else if(queryResult.getEpitype() == 1 && queryResult.getEpitype()!=5) {
+                    map.put("code",400);
                     map.put("message","当前孩子今天已健康打卡或已测过体温,请明天再来");
                 }
             }
