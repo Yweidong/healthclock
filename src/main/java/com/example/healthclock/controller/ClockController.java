@@ -38,7 +38,7 @@ public class ClockController {
         }else if(map.get("code").equals(4000)){
             throw new ResultException(ResultStatus.SPECIAL_CODE, "");
         }else {
-            throw new ResultException(ResultStatus.INTERNAL_SERVER_ERROR,"");
+            throw new ResultException(ResultStatus.BAD_REQUEST,"当前打卡人数过多，请稍后再试");
         }
 
     }
