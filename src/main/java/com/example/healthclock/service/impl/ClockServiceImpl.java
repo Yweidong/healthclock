@@ -51,8 +51,11 @@ public class ClockServiceImpl implements ClockService {
             return map;
         }
         String redis_key = "clock:"+stuId;
-
-        if(redisTemplate.hasKey(redis_key) && redisTemplate.opsForValue().get(redis_key).equals(1)) {
+        String early_warn_key = "earlyWarn:"+studentsDaoOne.getSchoolId();
+        if(redisTemplate.hasKey(early_warn_key) && redisTemplate.opsForValue().get(early_warn_key).equals(2)) {
+            map.put("code",400);
+            map.put("message","家长暂无权限打卡,统一由班主任代打");
+        }else if(redisTemplate.hasKey(redis_key) && redisTemplate.opsForValue().get(redis_key).equals(1)) {
             map.put("code",4000);
             map.put("message"," ");
         }else {
