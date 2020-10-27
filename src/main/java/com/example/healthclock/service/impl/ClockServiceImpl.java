@@ -1,8 +1,10 @@
 package com.example.healthclock.service.impl;
 
+import cn.hutool.core.util.RandomUtil;
 import com.example.healthclock.dao.HealthPunchDao;
 import com.example.healthclock.dao.IsstartDao;
 import com.example.healthclock.dao.StudentsDao;
+import com.example.healthclock.dto.HealPunSubDto;
 import com.example.healthclock.entity.HealthPunchEntity;
 import com.example.healthclock.entity.IsstartEntity;
 import com.example.healthclock.entity.StudentsEntity;
@@ -80,5 +82,19 @@ public class ClockServiceImpl implements ClockService {
             }
         }
         return map;
+    }
+
+    @Override
+    public HashMap<String, Object> healthpunchSub(HealPunSubDto healPunSubDto) {
+        HashMap<String, Object> map = new HashMap<>();
+        if(healPunSubDto.getStuId().equals(0)) {
+            map.put("code",400);
+            map.put("message","参数错误");
+            return map;
+        }
+        long endTime = DateToTimestmp(SysCurrTime())+60*60*9+RandomUtil.randomInt(10,300);
+        long clockTime = DateToTimestmp(SysCurrTime())+60*60*10+RandomUtil.randomInt(10,300);
+
+        return null;
     }
 }

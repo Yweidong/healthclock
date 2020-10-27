@@ -4,6 +4,8 @@ import com.example.healthclock.annotation.MyLogAnno;
 import com.example.healthclock.annotation.ResObjectAnno;
 import com.example.healthclock.common.Result;
 import com.example.healthclock.common.ResultStatus;
+import com.example.healthclock.dao.HealthPunchDao;
+import com.example.healthclock.dto.HealPunSubDto;
 import com.example.healthclock.exception.ResultException;
 import com.example.healthclock.service.ClockService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,8 @@ public class ClockController {
 
 
 
+
+
     @GetMapping("/dailyLimit")
     @MyLogAnno()
     public Result dailyLimit(@RequestParam(name = "stuId") Integer stuId) {
@@ -41,5 +45,12 @@ public class ClockController {
             throw new ResultException(ResultStatus.BAD_REQUEST,"当前打卡人数过多，请稍后再试");
         }
 
+    }
+    @PostMapping("/healthpunchSub")
+    @MyLogAnno
+    public Result healthpunchSub(HealPunSubDto healPunSubDto) {
+        HashMap<String, Object> map = clockService.healthpunchSub(healPunSubDto);
+        System.out.println(healPunSubDto);
+        return null;
     }
 }
