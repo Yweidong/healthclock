@@ -11,4 +11,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @create: 2020-10-27 15:13
  **/
 public interface IllnesDao extends JpaRepository<IllnesEntity,Integer> {
+    IllnesEntity findByIllness(String illness);
 }

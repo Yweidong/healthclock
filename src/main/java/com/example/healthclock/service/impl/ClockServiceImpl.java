@@ -1,17 +1,21 @@
 package com.example.healthclock.service.impl;
 
 import cn.hutool.core.util.RandomUtil;
-import com.example.healthclock.dao.HealthPunchDao;
-import com.example.healthclock.dao.IsstartDao;
-import com.example.healthclock.dao.StudentsDao;
+import com.example.healthclock.common.HealthCodeName;
+import com.example.healthclock.common.TimeCheck;
+import com.example.healthclock.dao.*;
 import com.example.healthclock.dto.HealPunSubDto;
 import com.example.healthclock.entity.HealthPunchEntity;
 import com.example.healthclock.entity.IsstartEntity;
+import com.example.healthclock.entity.OrganizesEntity;
 import com.example.healthclock.entity.StudentsEntity;
 import com.example.healthclock.service.ClockService;
+import com.example.healthclock.utils.JpaUtils;
+import com.example.healthclock.utils.TimeTransformationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +40,12 @@ public class ClockServiceImpl implements ClockService {
     StudentsDao studentsDao;
     @Autowired
     RedisTemplate redisTemplate;
+    @Autowired
+    OrganizesDao organizesDao;
+    @Autowired
+    IllnesDao illnesDao;
+
+    private HealthPunchEntity healthPunchEntity = new HealthPunchEntity();
     @Override
     public HashMap<String, Object> dailyLimit(Integer stuId) {
         HashMap<String, Object> map = new HashMap<>();
@@ -85,6 +95,7 @@ public class ClockServiceImpl implements ClockService {
     }
 
     @Override
+    @Transactional
     public HashMap<String, Object> healthpunchSub(HealPunSubDto healPunSubDto) {
         HashMap<String, Object> map = new HashMap<>();
         if(healPunSubDto.getStuId().equals(0)) {
@@ -94,7 +105,31 @@ public class ClockServiceImpl implements ClockService {
         }
         long endTime = DateToTimestmp(SysCurrTime())+60*60*9+RandomUtil.randomInt(10,300);
         long clockTime = DateToTimestmp(SysCurrTime())+60*60*10+RandomUtil.randomInt(10,300);
-
+        StudentsEntity studentsEntity = studentsDao.getOne(healPunSubDto.getStuId());
+        OrganizesEntity organizesEntity = organizesDao.getOne(studentsEntity.getOrganizeID());
+        Integer quantum = new TimeCheck().getQuantum(SysCurrTimestmp(), organizesEntity.getStage());
+        HealthPunchEntity result = healthPunchDao.otherQueryResult(
+                quantum,
+                studentsEntity.getId(),
+                String.valueOf(DateToTimestmp(SysCurrTime())),
+                String.valueOf(DateToTimestmp(TomorrowDate()))
+        );
+        if(healPunSubDto.getStatus().equals(1)) {
+            String stage = HealthCodeName.GREEN.getMessage();
+            if(result!=null) {
+                if(!("".equals(healPunSubDto.getColor())) && !(healPunSubDto.getColor().equals(1)) && !(healPunSubDto.getColor().equals(5))) {
+                    healthPunchEntity.setId(result.getId());
+                    healthPunchEntity.setEpistated(1);
+                    healthPunchEntity.setStaged(HealthCodeName.GREEN.getMessage());
+                    healthPunchEntity.setIllded(String.valueOf(illnesDao.findByIllness("身体正常").getId()));
+                    healthPunchEntity.setIscheck(2);
+                    healthPunchEntity.setUpdateTime(String.valueOf(
+                            TimeTransformationUtils.DateStmpToTimestmp(TimeTransformationUtils.SysCurrTimestmp())));
+                    JpaUtils.copyNotNullProperties(healthPunchEntity,result);
+                    healthPunchDao.saveAndFlush(result);
+                }
+            }
+        }
         return null;
     }
 }

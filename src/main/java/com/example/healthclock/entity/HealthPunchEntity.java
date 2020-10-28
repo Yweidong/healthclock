@@ -1,6 +1,8 @@
 package com.example.healthclock.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
 import org.omg.PortableInterceptor.INACTIVE;
 
 import javax.persistence.*;
@@ -17,6 +19,8 @@ import java.io.Serializable;
 @Entity
 @Table(name = "HealthPunch")
 @JsonIgnoreProperties(value = {"hibernateLazyInitializer","handler"})
+@DynamicInsert
+@DynamicUpdate
 public class HealthPunchEntity implements Serializable {
     private static final long serialVersionUID = -3437715213537704594L;
     @Id

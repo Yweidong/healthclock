@@ -18,6 +18,11 @@ import java.util.List;
  **/
 
 public interface HealthPunchDao extends JpaRepository<HealthPunchEntity,Integer> {
-    @Query(nativeQuery = true,value = "select * from HealthPunch where stuid = :stuId and createTime> :ystd and createTime< :today order by quantum")
+    @Query(nativeQuery = true,value = "select * from HealthPunch where stuid = :stuId and createTime> :ystd and createTime< :today order by quantum DESC limit 1")
     HealthPunchEntity defineQueryResult(@Param("stuId") Integer stuId, @Param("ystd") String ystd,@Param("today") String today);
+
+
+    @Query(nativeQuery = true,value = "select * from HealthPunch where quantum =:quantum and stuid = :stuId and createTime> :ystd and createTime< :today order by createTime DESC limit 1")
+    HealthPunchEntity otherQueryResult(@Param("quantum") Integer quantum,@Param("stuId") Integer stuId,@Param("ystd") String ystd,@Param("today") String today);
+
 }

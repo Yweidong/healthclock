@@ -11,7 +11,7 @@ import com.example.healthclock.utils.TimeTransformationUtils;
  **/
 public class TimeCheck {
 
-    public static long getQuantum(String date,Integer stage) {
+    public static Integer getQuantum(String date,Integer stage) {
 
         String dates = TimeTransformationUtils.TimestmpToDate(TimeTransformationUtils.DateToTimestmp(date),true);
 
@@ -48,4 +48,6 @@ public class TimeCheck {
     public static void main(String[] args) {
         System.out.println(TimeCheck.getQuantum("2020-10-27 09:36:22",0));
     }
+
+
 }
