@@ -38,7 +38,7 @@ public class ClockController {
     }
     @PostMapping("/healthpunchSub")
     @MyLogAnno
-    public Result healthpunchSub(HealPunSubDto healPunSubDto) {
+    public Result healthpunchSub(@RequestBody HealPunSubDto healPunSubDto) {
         HashMap<String, Object> map = clockService.healthpunchSub(healPunSubDto);
         Result getresponse = Response.getresponse(map);
         return getresponse;
