@@ -76,6 +76,17 @@ public class TimeTransformationUtils {
 
     /*
      * @Author 杨伟栋
+     * @Description 获取当前时间戳
+     * @Date 2020/10/15 9:48 下午
+     * @Param
+     * @return
+     **/
+    public static long getLocalStmp() {
+        return DateStmpToTimestmp(SysCurrTimestmp());
+    }
+
+    /*
+     * @Author 杨伟栋
      * @Description 将特定日期转换成时间戳
      * @Date 2020/10/15 9:36 下午
      * @Param date 特定的日期(相当于当日的零点)

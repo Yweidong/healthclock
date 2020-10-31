@@ -4,4 +4,5 @@ import com.example.healthclock.entity.StudentGroupEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface StudentGroupDao extends JpaRepository<StudentGroupEntity,Integer> {
+    StudentGroupEntity findByStuidAndCreateTimeBetween(Integer stuId,String beginTime,String endTime);
 }

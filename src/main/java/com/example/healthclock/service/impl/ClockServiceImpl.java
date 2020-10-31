@@ -1,25 +1,26 @@
 package com.example.healthclock.service.impl;
 
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.json.JSONObject;
 import com.example.healthclock.common.HealthCodeName;
+import com.example.healthclock.common.ResultStatus;
 import com.example.healthclock.common.TimeCheck;
 import com.example.healthclock.dao.*;
 import com.example.healthclock.dto.HealPunSubDto;
-import com.example.healthclock.entity.HealthPunchEntity;
-import com.example.healthclock.entity.IsstartEntity;
-import com.example.healthclock.entity.OrganizesEntity;
-import com.example.healthclock.entity.StudentsEntity;
+import com.example.healthclock.entity.*;
+import com.example.healthclock.exception.ResultException;
 import com.example.healthclock.service.ClockService;
 import com.example.healthclock.utils.JpaUtils;
 import com.example.healthclock.utils.TimeTransformationUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.example.healthclock.utils.TimeTransformationUtils.*;
 
@@ -32,6 +33,11 @@ import static com.example.healthclock.utils.TimeTransformationUtils.*;
  **/
 @Service
 public class ClockServiceImpl implements ClockService {
+    private static final String HEALTH_CLOCK = "healthclock:";
+
+    private static final String CLOCK = "clock:";
+
+    private  Map<String,Object> objectMap = new HashMap<>();
     @Autowired
     HealthPunchDao healthPunchDao;
     @Autowired
@@ -44,6 +50,8 @@ public class ClockServiceImpl implements ClockService {
     OrganizesDao organizesDao;
     @Autowired
     IllnesDao illnesDao;
+    @Autowired
+    StudentGroupDao studentGroupDao;
 
     private HealthPunchEntity healthPunchEntity = new HealthPunchEntity();
     @Override
@@ -97,7 +105,10 @@ public class ClockServiceImpl implements ClockService {
     @Override
     @Transactional
     public HashMap<String, Object> healthpunchSub(HealPunSubDto healPunSubDto) {
+
         HashMap<String, Object> map = new HashMap<>();
+        String stage = "";
+        Integer record_id = 0;
         if(healPunSubDto.getStuId().equals(0)) {
             map.put("code",400);
             map.put("message","参数错误");
@@ -105,31 +116,186 @@ public class ClockServiceImpl implements ClockService {
         }
         long endTime = DateToTimestmp(SysCurrTime())+60*60*9+RandomUtil.randomInt(10,300);
         long clockTime = DateToTimestmp(SysCurrTime())+60*60*10+RandomUtil.randomInt(10,300);
+//        long endTime = 1604109941;
+//        long clockTime = 1604109941;
         StudentsEntity studentsEntity = studentsDao.getOne(healPunSubDto.getStuId());
         OrganizesEntity organizesEntity = organizesDao.getOne(studentsEntity.getOrganizeID());
         Integer quantum = new TimeCheck().getQuantum(SysCurrTimestmp(), organizesEntity.getStage());
-        HealthPunchEntity result = healthPunchDao.otherQueryResult(
-                quantum,
-                studentsEntity.getId(),
-                String.valueOf(DateToTimestmp(SysCurrTime())),
-                String.valueOf(DateToTimestmp(TomorrowDate()))
-        );
-        if(healPunSubDto.getStatus().equals(1)) {
-            String stage = HealthCodeName.GREEN.getMessage();
-            if(result!=null) {
-                if(!("".equals(healPunSubDto.getColor())) && !(healPunSubDto.getColor().equals(1)) && !(healPunSubDto.getColor().equals(5))) {
-                    healthPunchEntity.setId(result.getId());
-                    healthPunchEntity.setEpistated(1);
-                    healthPunchEntity.setStaged(HealthCodeName.GREEN.getMessage());
-                    healthPunchEntity.setIllded(String.valueOf(illnesDao.findByIllness("身体正常").getId()));
-                    healthPunchEntity.setIscheck(2);
-                    healthPunchEntity.setUpdateTime(String.valueOf(
-                            TimeTransformationUtils.DateStmpToTimestmp(TimeTransformationUtils.SysCurrTimestmp())));
+        try{
+            HealthPunchEntity result = healthPunchDao.otherQueryResult(
+                    quantum,
+                    studentsEntity.getId(),
+                    String.valueOf(DateToTimestmp(SysCurrTime())),
+                    String.valueOf(DateToTimestmp(TomorrowDate()))
+            );
+
+
+            if(healPunSubDto.getStatus().equals(1)) {
+                stage = HealthCodeName.GREEN.getMessage();
+
+                objectMap.put("stage",stage);
+                if(result!=null) {
+                    record_id = result.getId();
+                    if(!(healPunSubDto.getColor().equals(0)) && !(healPunSubDto.getColor().equals(1)) && !(healPunSubDto.getColor().equals(5))) {
+                        healthPunchEntity.setEpistated(1);
+                        healthPunchEntity.setStaged(stage);
+                        healthPunchEntity.setIllded(String.valueOf(illnesDao.findByIllness("身体正常").getId()));
+                        healthPunchEntity.setIscheck(2);
+                        healthPunchEntity.setUpdateTime(String.valueOf(
+                                TimeTransformationUtils.getLocalStmp()));
+
+                    }else {
+                        healthPunchEntity.setEpitype(1);
+                        healthPunchEntity.setEpidesc(String.valueOf(7));
+                        healthPunchEntity.setStage(stage);
+                        healthPunchEntity.setCreateTime(String.valueOf(
+                                TimeTransformationUtils.getLocalStmp()));
+                        healthPunchEntity.setIscheck(0);
+                        healthPunchEntity.setRemark("");
+                        healthPunchEntity.setUpdateTime("");
+                    }
                     JpaUtils.copyNotNullProperties(healthPunchEntity,result);
                     healthPunchDao.saveAndFlush(result);
+
+
+                }else {
+                    healthPunchEntity.setStuid(healPunSubDto.getStuId());
+                    healthPunchEntity.setEpitype(1);
+                    healthPunchEntity.setEpidesc(String.valueOf(7));
+                    healthPunchEntity.setStage(stage);
+                    healthPunchEntity.setOrganizeID(studentsEntity.getOrganizeID());
+                    healthPunchEntity.setSchoolId(studentsEntity.getSchoolId());
+                    healthPunchEntity.setCreateTime(String.valueOf(
+                            TimeTransformationUtils.getLocalStmp()));
+                    healthPunchEntity.setQuantum(quantum);
+                    record_id = healthPunchDao.saveAndFlush(healthPunchEntity).getId();
+
                 }
+                objectMap.put("color",1);
+                objectMap.put("record_id",record_id);
+                map.put("code",200);
+                map.put("message","操作成功");
+
+            }else {
+                /**
+                 *1.事假
+                 *2。病假
+                 */
+
+                if(healPunSubDto.getType().equals(1)) {
+                    stage = HealthCodeName.CYAN.getMessage();
+                    String illness = illnesDao
+                            .getOne(Integer.valueOf(healPunSubDto.getSymId()))
+                            .getIllness();
+
+                    objectMap.put("stage",stage);
+                    objectMap.put("illness",illness);
+                if(result!=null) {
+                    record_id = result.getId();
+                    healthPunchEntity.setEpitype(2);
+                    healthPunchEntity.setEpidesc(healPunSubDto.getSymId());
+                    healthPunchEntity.setStage(stage);
+                    healthPunchEntity.setCreateTime(String.valueOf(
+                            TimeTransformationUtils.getLocalStmp()));
+                    healthPunchEntity.setRemark(healPunSubDto.getRemark());
+                    healthPunchEntity.setIscheck(0);
+                    JpaUtils.copyNotNullProperties(healthPunchEntity,result);
+                    healthPunchDao.saveAndFlush(result);
+
+                }else {
+                    healthPunchEntity.setStuid(healPunSubDto.getStuId());
+                    healthPunchEntity.setEpitype(2);
+                    healthPunchEntity.setEpidesc(healPunSubDto.getSymId());
+                    healthPunchEntity.setStage(stage);
+                    healthPunchEntity.setOrganizeID(studentsEntity.getOrganizeID());
+                    healthPunchEntity.setSchoolId(studentsEntity.getSchoolId());
+                    healthPunchEntity.setCreateTime(String.valueOf(
+                            TimeTransformationUtils.getLocalStmp()));
+                    healthPunchEntity.setQuantum(quantum);
+                    healthPunchEntity.setRemark(healPunSubDto.getRemark());
+                   record_id = healthPunchDao.saveAndFlush(healthPunchEntity).getId();
+
+                }
+                    objectMap.put("code",2);
+                    objectMap.put("record_id",record_id);
+                    map.put("code",200);
+                    map.put("message","操作成功");
+
+                }else {
+                    if("".equals(healPunSubDto.getSymptom())) {
+                        map.put("code",400);
+                        map.put("message","请选择病情");
+                        return map;
+                    }
+                    String[] split = healPunSubDto.getSymptom().split(",");
+                    Integer code = illnesDao.findByIds(split).getType();
+
+                    if(code.equals(3)) {
+                        stage = HealthCodeName.YELLOW.getMessage();
+                    }else {
+                        stage = HealthCodeName.RED.getMessage();
+                    }
+                    objectMap.put("stage",stage);
+                    String collect = illnesDao.findByIdIn(split).stream().map(illnesEntity -> {
+                        return illnesEntity.getIllness();
+                    }).collect(Collectors.joining(","));
+
+                    objectMap.put("illness",collect);
+                    healthPunchEntity.setEpitype(code);
+                    healthPunchEntity.setEpidesc(healPunSubDto.getSymptom());
+                    healthPunchEntity.setStage(stage);
+                    healthPunchEntity.setHosName(healPunSubDto.getHos_name());
+                    healthPunchEntity.setCaseType(healPunSubDto.getCase_type());
+                    healthPunchEntity.setCreateTime(String.valueOf(
+                            TimeTransformationUtils.getLocalStmp()));
+                    healthPunchEntity.setRemark(healPunSubDto.getRemark());
+                if(result!=null) {
+                    healthPunchEntity.setIscheck(0);
+                    JpaUtils.copyNotNullProperties(healthPunchEntity,result);
+                    healthPunchDao.saveAndFlush(result);
+
+                }else {
+                    healthPunchEntity.setOrganizeID(studentsEntity.getOrganizeID());
+                    healthPunchEntity.setQuantum(quantum);
+                    healthPunchEntity.setStuid(healPunSubDto.getStuId());
+                    healthPunchEntity.setSchoolId(studentsEntity.getSchoolId());
+                    record_id = healthPunchDao.saveAndFlush(healthPunchEntity).getId();
+
+                }
+                    objectMap.put("color",code);
+                    objectMap.put("record_id",record_id);
+                }
+
+                StudentGroupEntity sgresult = studentGroupDao.findByStuidAndCreateTimeBetween(healPunSubDto.getStuId(),
+                        String.valueOf(DateToTimestmp(SysCurrTime())),
+                        String.valueOf(DateToTimestmp(TomorrowDate())));
+                if(sgresult!=null) {
+                    StudentGroupEntity studentGroupEntity = new StudentGroupEntity();
+                    studentGroupEntity.setStatus(3);
+                    studentGroupEntity.setUpdateTime(String.valueOf(
+                            TimeTransformationUtils.getLocalStmp()));
+                    JpaUtils.copyNotNullProperties(studentGroupEntity,sgresult);
+                    studentGroupDao.saveAndFlush(sgresult);
+                }
+                map.put("code",200);
+                map.put("message","操作成功");
             }
+
+            if(endTime>=TimeTransformationUtils.getLocalStmp()) {
+                String redis_key = HEALTH_CLOCK+healPunSubDto.getStuId();
+               redisTemplate.opsForValue().set(redis_key,objectMap,endTime-TimeTransformationUtils.getLocalStmp(), TimeUnit.SECONDS);
+            }
+            if(clockTime>=TimeTransformationUtils.getLocalStmp()) {
+                String redis_key = CLOCK+healPunSubDto.getStuId();
+                redisTemplate.opsForValue().increment(redis_key);
+                redisTemplate.expire(redis_key,clockTime-TimeTransformationUtils.getLocalStmp(),TimeUnit.SECONDS);
+            }
+
+        }catch(Exception e){
+            map.put("code",400);
+            map.put("message","操作失败");
         }
-        return null;
+        return map;
     }
+
 }

@@ -20,9 +20,10 @@ public class JpaUtils {
 
     private static String[] getNullPropertyNames(Object object) {
         final BeanWrapperImpl wrapper = new BeanWrapperImpl(object);
+
         return Stream.of(wrapper.getPropertyDescriptors())
-                .map(PropertyDescriptor::getName)
-                .filter(propertyName -> wrapper.getPropertyValue(propertyName) == null)
+                .map(PropertyDescriptor::getName)//获取bean对象各个属性的名字
+                .filter(propertyName -> wrapper.getPropertyValue(propertyName) == null)//过滤字段为null的
                 .toArray(String[]::new);
     }
 }

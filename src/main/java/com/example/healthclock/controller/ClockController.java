@@ -2,6 +2,7 @@ package com.example.healthclock.controller;
 
 import com.example.healthclock.annotation.MyLogAnno;
 import com.example.healthclock.annotation.ResObjectAnno;
+import com.example.healthclock.common.Response;
 import com.example.healthclock.common.Result;
 import com.example.healthclock.common.ResultStatus;
 import com.example.healthclock.dao.HealthPunchDao;
@@ -27,30 +28,19 @@ public class ClockController {
     @Autowired
     ClockService clockService;
 
-
-
-
-
     @GetMapping("/dailyLimit")
-    @MyLogAnno()
+    @MyLogAnno
     public Result dailyLimit(@RequestParam(name = "stuId") Integer stuId) {
         HashMap<String, Object> map = clockService.dailyLimit(stuId);
-        if(map.get("code").equals(400)) {
-            throw new ResultException(ResultStatus.BAD_REQUEST, (String) map.get("message"));
-        }else if(map.get("code").equals(200)) {
-            return new Result(ResultStatus.SUCCESS,map.get("message"));
-        }else if(map.get("code").equals(4000)){
-            throw new ResultException(ResultStatus.SPECIAL_CODE, "");
-        }else {
-            throw new ResultException(ResultStatus.BAD_REQUEST,"当前打卡人数过多，请稍后再试");
-        }
+        Result getresponse = Response.getresponse(map);
+        return  getresponse;
 
     }
     @PostMapping("/healthpunchSub")
     @MyLogAnno
     public Result healthpunchSub(HealPunSubDto healPunSubDto) {
         HashMap<String, Object> map = clockService.healthpunchSub(healPunSubDto);
-        System.out.println(healPunSubDto);
-        return null;
+        Result getresponse = Response.getresponse(map);
+        return getresponse;
     }
 }
