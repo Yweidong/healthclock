@@ -3,7 +3,15 @@ server:
   tomcat:
     threads:
       max: 200
-
+oss:
+  qiniu:
+    domain: https://file.easyong.cn
+      #公钥
+    accessKey: BKqhFD2Fbr20V1Twd0ytkrwfYjxgZ0iJs3Cpk5gy
+      #私钥
+    secretKey: ZJ5ne7Vaa6OkkrzJ4_1KatXUciOr42Dlk54BGw1L
+      #存储空间名称
+    bucketName: yktapp
 spring:
   datasource:
     url: jdbc:mysql://123.206.232.137:3306/operation?suseUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false
@@ -24,6 +32,9 @@ spring:
       filters: stat,wall,log4j
       min-evictable-idle-time-millis: 180000
       keep-alive: true
+  data:
+    mongodb:
+      uri: mongodb://127.0.0.1:27017/test
 
 
   redis:
