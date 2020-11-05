@@ -15,6 +15,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * @program: healthclock
@@ -48,5 +49,13 @@ public class RubbishServiceImpl implements RubbishService {
             }
         });
 
+    }
+
+    @Override
+    public List<RubbishEntity> queryByTitle(String title) {
+        Pattern pattern = Pattern.compile("^.*" + title + ".*$", Pattern.CASE_INSENSITIVE);
+        Query query = new Query(Criteria.where("title").regex(pattern));
+        List<RubbishEntity> rubbishEntities = mongoTemplate.find(query, RubbishEntity.class);
+        return rubbishEntities;
     }
 }

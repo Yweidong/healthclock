@@ -9,7 +9,10 @@ import com.example.healthclock.service.RubbishService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /**
  * @program: healthclock
@@ -34,5 +37,12 @@ public class RubbishController {
         rubbishService.updateEntity(RubbishEntity);
 
         return new Result(ResultStatus.SUCCESS,"操作成功");
+    }
+
+    @GetMapping("/search")
+    @MyLogAnno
+    public List<RubbishEntity> searchList(@RequestParam(value = "title") String title) {
+        List<RubbishEntity> rubbishEntities = rubbishService.queryByTitle(title);
+        return rubbishEntities;
     }
 }

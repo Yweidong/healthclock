@@ -34,7 +34,7 @@ spring:
       keep-alive: true
   data:
     mongodb:
-      uri: mongodb://127.0.0.1:27017/test
+      uri: mongodb://139.224.255.39:27017/test
 
 
   redis:
