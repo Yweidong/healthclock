@@ -1,5 +1,6 @@
 package com.example.healthclock.entity.mongodb;
 
+
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -41,6 +42,7 @@ public class RubbishEntity implements Serializable {
     public void setType(String type) {
         this.type = type;
     }
+
 
     public String getTitle() {
         return title;

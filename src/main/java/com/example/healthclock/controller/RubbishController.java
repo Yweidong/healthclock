@@ -6,6 +6,7 @@ import com.example.healthclock.common.Result;
 import com.example.healthclock.common.ResultStatus;
 import com.example.healthclock.entity.mongodb.RubbishEntity;
 import com.example.healthclock.service.RubbishService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @program: healthclock
@@ -45,4 +47,13 @@ public class RubbishController {
         List<RubbishEntity> rubbishEntities = rubbishService.queryByTitle(title);
         return rubbishEntities;
     }
+
+    @GetMapping("/searchType")
+    @MyLogAnno
+    public Set<String> searchTypeList(@RequestParam(value = "type") String type) {
+        Set<String> strings = rubbishService.queryByType(type);
+        return strings;
+
+    }
+
 }

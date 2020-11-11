@@ -103,7 +103,8 @@ public class ClockServiceImpl implements ClockService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
+
     public HashMap<String, Object> healthpunchSub(HealPunSubDto healPunSubDto) {
 
         HashMap<String, Object> map = new HashMap<>();
@@ -137,25 +138,33 @@ public class ClockServiceImpl implements ClockService {
                 if(result!=null) {
                     record_id = result.getId();
                     if(!(healPunSubDto.getColor().equals(0)) && !(healPunSubDto.getColor().equals(1)) && !(healPunSubDto.getColor().equals(5))) {
-                        healthPunchEntity.setEpistated(1);
-                        healthPunchEntity.setStaged(stage);
-                        healthPunchEntity.setIllded(String.valueOf(illnesDao.findByIllness("身体正常").getId()));
-                        healthPunchEntity.setIscheck(2);
-                        healthPunchEntity.setUpdateTime(String.valueOf(
-                                TimeTransformationUtils.getLocalStmp()));
+                       healthPunchDao.updateNormal(
+                               1,
+                               stage,
+                               String.valueOf(illnesDao.findByIllness("身体正常").getId()),
+                               2,
+                               String.valueOf(
+                                       TimeTransformationUtils.getLocalStmp()),
+                               record_id
+                       );
 
                     }else {
-                        healthPunchEntity.setEpitype(1);
-                        healthPunchEntity.setEpidesc(String.valueOf(7));
-                        healthPunchEntity.setStage(stage);
-                        healthPunchEntity.setCreateTime(String.valueOf(
-                                TimeTransformationUtils.getLocalStmp()));
-                        healthPunchEntity.setIscheck(0);
-                        healthPunchEntity.setRemark("");
-                        healthPunchEntity.setUpdateTime("");
+                        healthPunchDao.updateOtherNormal(
+                                1,
+                                String.valueOf(7),
+                                stage,
+                                String.valueOf(
+                                        TimeTransformationUtils.getLocalStmp()),
+                                0,
+                                "",
+                                "",
+                                "",
+                                0,
+                                record_id
+                        );
+
                     }
-                    JpaUtils.copyNotNullProperties(healthPunchEntity,result);
-                    healthPunchDao.saveAndFlush(result);
+
 
 
                 }else {
@@ -190,32 +199,36 @@ public class ClockServiceImpl implements ClockService {
 
                     objectMap.put("stage",stage);
                     objectMap.put("illness",illness);
-                if(result!=null) {
-                    record_id = result.getId();
-                    healthPunchEntity.setEpitype(2);
-                    healthPunchEntity.setEpidesc(healPunSubDto.getSymId());
-                    healthPunchEntity.setStage(stage);
-                    healthPunchEntity.setCreateTime(String.valueOf(
-                            TimeTransformationUtils.getLocalStmp()));
-                    healthPunchEntity.setRemark(healPunSubDto.getRemark());
-                    healthPunchEntity.setIscheck(0);
-                    JpaUtils.copyNotNullProperties(healthPunchEntity,result);
-                    healthPunchDao.saveAndFlush(result);
+                    if(result!=null) {
+                        record_id = result.getId();
+                        healthPunchDao.updateOtherNormal(
+                                2,
+                                healPunSubDto.getSymId(),
+                                stage,
+                                String.valueOf(
+                                        TimeTransformationUtils.getLocalStmp()),
+                                0,
+                                healPunSubDto.getRemark(),
+                                "",
+                                "",
+                                0,
+                                record_id
+                        );
 
-                }else {
-                    healthPunchEntity.setStuid(healPunSubDto.getStuId());
-                    healthPunchEntity.setEpitype(2);
-                    healthPunchEntity.setEpidesc(healPunSubDto.getSymId());
-                    healthPunchEntity.setStage(stage);
-                    healthPunchEntity.setOrganizeID(studentsEntity.getOrganizeID());
-                    healthPunchEntity.setSchoolId(studentsEntity.getSchoolId());
-                    healthPunchEntity.setCreateTime(String.valueOf(
-                            TimeTransformationUtils.getLocalStmp()));
-                    healthPunchEntity.setQuantum(quantum);
-                    healthPunchEntity.setRemark(healPunSubDto.getRemark());
-                   record_id = healthPunchDao.saveAndFlush(healthPunchEntity).getId();
+                    }else {
+                        healthPunchEntity.setStuid(healPunSubDto.getStuId());
+                        healthPunchEntity.setEpitype(2);
+                        healthPunchEntity.setEpidesc(healPunSubDto.getSymId());
+                        healthPunchEntity.setStage(stage);
+                        healthPunchEntity.setOrganizeID(studentsEntity.getOrganizeID());
+                        healthPunchEntity.setSchoolId(studentsEntity.getSchoolId());
+                        healthPunchEntity.setCreateTime(String.valueOf(
+                                TimeTransformationUtils.getLocalStmp()));
+                        healthPunchEntity.setQuantum(quantum);
+                        healthPunchEntity.setRemark(healPunSubDto.getRemark());
+                       record_id = healthPunchDao.saveAndFlush(healthPunchEntity).getId();
 
-                }
+                    }
                     objectMap.put("code",2);
                     objectMap.put("record_id",record_id);
                     map.put("code",200);
@@ -227,6 +240,7 @@ public class ClockServiceImpl implements ClockService {
                         map.put("message","请选择病情");
                         return map;
                     }
+                    record_id = result.getId();
                     String[] split = healPunSubDto.getSymptom().split(",");
                     Integer code = illnesDao.findByIds(split).getType();
 
@@ -241,27 +255,40 @@ public class ClockServiceImpl implements ClockService {
                     }).collect(Collectors.joining(","));
 
                     objectMap.put("illness",collect);
-                    healthPunchEntity.setEpitype(code);
-                    healthPunchEntity.setEpidesc(healPunSubDto.getSymptom());
-                    healthPunchEntity.setStage(stage);
-                    healthPunchEntity.setHosName(healPunSubDto.getHos_name());
-                    healthPunchEntity.setCaseType(healPunSubDto.getCase_type());
-                    healthPunchEntity.setCreateTime(String.valueOf(
-                            TimeTransformationUtils.getLocalStmp()));
-                    healthPunchEntity.setRemark(healPunSubDto.getRemark());
-                if(result!=null) {
-                    healthPunchEntity.setIscheck(0);
-                    JpaUtils.copyNotNullProperties(healthPunchEntity,result);
-                    healthPunchDao.saveAndFlush(result);
 
-                }else {
-                    healthPunchEntity.setOrganizeID(studentsEntity.getOrganizeID());
-                    healthPunchEntity.setQuantum(quantum);
-                    healthPunchEntity.setStuid(healPunSubDto.getStuId());
-                    healthPunchEntity.setSchoolId(studentsEntity.getSchoolId());
-                    record_id = healthPunchDao.saveAndFlush(healthPunchEntity).getId();
+                    if(result!=null) {
+                        healthPunchDao.updateOtherNormal(
+                                code,
+                                healPunSubDto.getSymptom(),
+                                stage,
+                                String.valueOf(
+                                        TimeTransformationUtils.getLocalStmp()),
+                                0,
+                                healPunSubDto.getRemark(),
+                                "",
+                                healPunSubDto.getHos_name(),
+                                healPunSubDto.getCase_type(),
+                                record_id
 
-                }
+                        );
+
+
+                    }else {
+                        healthPunchEntity.setEpitype(code);
+                        healthPunchEntity.setEpidesc(healPunSubDto.getSymptom());
+                        healthPunchEntity.setStage(stage);
+                        healthPunchEntity.setHosName(healPunSubDto.getHos_name());
+                        healthPunchEntity.setCaseType(healPunSubDto.getCase_type());
+                        healthPunchEntity.setCreateTime(String.valueOf(
+                                TimeTransformationUtils.getLocalStmp()));
+                        healthPunchEntity.setRemark(healPunSubDto.getRemark());
+                        healthPunchEntity.setOrganizeID(studentsEntity.getOrganizeID());
+                        healthPunchEntity.setQuantum(quantum);
+                        healthPunchEntity.setStuid(healPunSubDto.getStuId());
+                        healthPunchEntity.setSchoolId(studentsEntity.getSchoolId());
+                        record_id = healthPunchDao.saveAndFlush(healthPunchEntity).getId();
+
+                    }
                     objectMap.put("color",code);
                     objectMap.put("record_id",record_id);
                 }
