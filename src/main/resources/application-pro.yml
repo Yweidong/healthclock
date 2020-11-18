@@ -23,6 +23,9 @@ spring:
       filters: stat,wall,log4j
       min-evictable-idle-time-millis: 180000
       keep-alive: true
+  data:
+    mongodb:
+      uri: mongodb://10.160.5.11:27017/test
 
   redis:
     host: 10.160.5.10
@@ -47,7 +50,5 @@ spring:
       naming:
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-  data:
-    mongodb:
-      uri: mongodb://139.224.255.39:27017/test
+
 

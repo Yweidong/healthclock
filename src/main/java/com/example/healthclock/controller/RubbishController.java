@@ -4,15 +4,15 @@ import com.example.healthclock.annotation.MyLogAnno;
 import com.example.healthclock.annotation.ResObjectAnno;
 import com.example.healthclock.common.Result;
 import com.example.healthclock.common.ResultStatus;
+import com.example.healthclock.common.RubbishType;
 import com.example.healthclock.entity.mongodb.RubbishEntity;
 import com.example.healthclock.service.RubbishService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -53,6 +53,15 @@ public class RubbishController {
     public Set<String> searchTypeList(@RequestParam(value = "type") String type) {
         Set<String> strings = rubbishService.queryByType(type);
         return strings;
+
+    }
+
+    @PostMapping("/insert")
+    @MyLogAnno
+    public void bulkData() {
+
+
+        rubbishService.bulkInsertData();
 
     }
 

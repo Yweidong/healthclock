@@ -1,11 +1,18 @@
 package com.example.healthclock.service.impl;
 
 
+import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.example.healthclock.common.RubbishType;
+import com.example.healthclock.dao.RubbishQueDao;
+import com.example.healthclock.entity.RubbishQueEntity;
 import com.example.healthclock.entity.mongodb.RubbishEntity;
 import com.example.healthclock.provider.QiNiuProvider;
 import com.example.healthclock.service.RubbishService;
 import com.example.healthclock.utils.FileNameUtils;
 
+import com.google.gson.JsonArray;
 import com.qiniu.storage.model.DefaultPutRet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,9 +22,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -39,6 +44,9 @@ public class RubbishServiceImpl implements RubbishService {
     MongoTemplate mongoTemplate;
     @Autowired
     QiNiuProvider qiNiuProvider;
+
+    @Autowired
+    RubbishQueDao rubbishQueDao;
 
     @Value("${oss.qiniu.domain}")
     private String domain;
@@ -84,5 +92,57 @@ public class RubbishServiceImpl implements RubbishService {
         }
 
         return objects;
+    }
+
+    @Override
+    public void bulkInsertData() {
+        List<RubbishEntity> list = mongoTemplate.findAll(RubbishEntity.class);
+        HashMap<String, String> map = new HashMap<>();
+
+        list.forEach(s->{
+            map.put(s.getTitle(),s.getType());
+            if(s.getList()!=null) {
+                s.getList().forEach(ss->{
+                    map.put(ss.toString(),s.getType());
+                });
+            }
+
+        });
+        List<HashMap<String,String>> list1 = new ArrayList<>(4);
+        HashMap<String, String> map1 = null;
+        String option;
+        for (int i = 0; i < 4; i++) {
+            map1 = new HashMap<>();
+            option = String.valueOf((char) (65+i));
+
+            map1.put("prefix",option);
+
+            map1.put("content", RubbishType.getMessage(option));
+            list1.add(i,map1);
+
+        }
+        final RubbishQueEntity[] rubbishQueEntity = new RubbishQueEntity[1];
+
+//
+        map.forEach((s, s2) -> {
+
+            if(RubbishType.getOption(s2) !=null) {
+                rubbishQueEntity[0] = new RubbishQueEntity();
+                rubbishQueEntity[0].setuId(1);
+                rubbishQueEntity[0].setType(1);
+                rubbishQueEntity[0].setNums(4);
+                rubbishQueEntity[0].setTitle(s+" 属于哪种分类()");
+                rubbishQueEntity[0].setParsing("测试");
+                rubbishQueEntity[0].setDiff(2);
+                rubbishQueEntity[0].setCorrect(RubbishType.getOption(s2));
+
+                rubbishQueEntity[0].setOptions(String.valueOf(JSONArray.parseArray(JSON.toJSONString(list1))));
+                System.out.println(rubbishQueEntity[0]);
+                Integer id = rubbishQueDao.saveAndFlush(rubbishQueEntity[0]).getId();
+                System.out.println(id);
+            }
+
+
+        });
     }
 }
